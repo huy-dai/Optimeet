@@ -119,5 +119,5 @@ def add_agenda():
   return json.dumps({"success": True}), 201
 
 if __name__ == '__main__':
-    app.run() 
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True) #Note: Not generally recommended to run Flask dev on all interfaces, but okay for our context
     
