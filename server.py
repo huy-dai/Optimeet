@@ -2,7 +2,7 @@ from flask import Flask, json, request
 import my_calendar as cal
 
 app = Flask(__name__)
-calendar = cal.Calendar()
+calendar = cal.read_initial_data()
 
 @app.route('/addmeeting', methods=['POST'])
 def add_meeting():
