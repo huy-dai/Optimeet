@@ -15,22 +15,26 @@ class Calendar:
         '''
         self.meetings = []
     
-    def find_time_slot(self, dayofweek, length):
+    def find_time_slot(self, dayofweek, length, earliest_hour=8):
         '''
         Find free time slot in Calendar for day `dayofweek`
-        for `length` number of minutes
+        for `length` number of minutes given that the earliest hour 
+        we want to meet is `earliest_hour`
         
         Returns (start,end) if time slot found, None otherwise
         '''
-        available = [m.get_time_tuple() for m in self.meetings if m.day == dayofweek] #Meetings on that day
-        available.insert(0,(0,0)) #Start marker
+        # Get meetings on that day that are after earliest_hour 
+        available = [m.get_time_tuple() for m in self.meetings if m.day == dayofweek and m.start >= 60*earliest_hour]
+        available.sort(key=lambda m: m[0])
+        available.insert(0,(60*earliest_hour,60*earliest_hour)) #Start marker
         available.append((1440-1,1440-1)) #End marker
+        print(available)
         for i in range(0,len(available)-1):
             curr = available[i]
             next = available[i+1]
             assert next[0] >= curr[1]
             diff = next[0] - curr[1]
-            if diff >= length:
+            if diff >= length and curr[1]//60 >= earliest_hour:
                 return (curr[1], curr[1]+length)
         return None
     def add_meeting(self,new_meeting):
@@ -73,7 +77,6 @@ class Calendar:
             if m.day == dayofweek and m.get_time_tuple()[0] == start:
                 m.set_agenda(new_agenda)
                 return
-
             
 class Meeting:
     def __init__(self, day, start, end, contact, notes='', agenda=''):
@@ -113,6 +116,8 @@ class Meeting:
         return (self.start, self.end) == (other.start, other.end)
     def __ne__(self, other):
         return not(self == other)
+    def __str__(self):
+        return f"{self.day}|{self.start}|{self.end}|{self.contact}|{self.notes}|{self.agenda}"
 
 def parseDate(day, reverse=False):
     '''
@@ -157,13 +162,33 @@ def parseTime(time, reverse=False):
         hour = 12
     return f"{hour:02}:{minute:02} {am_or_pm}"
     
+def read_initial_data(filename="initial_data.txt"):
+    '''
+    Given a filename with lines in the format:
+    `dateofweek|start|end|contact|notes|agenda`
     
+    Return a calendar with those meetings added in
+    '''
+    cal = Calendar()
+    with open(filename,"r") as f:
+        lines = f.read().splitlines()
+        for line in lines:
+            meet_info = line.split("|")
+            meet_info[0] = parseDate(meet_info[0]) #day
+            meet_info[1] = parseTime(meet_info[1]) #start
+            meet_info[2] = parseTime(meet_info[2]) #end
+            new_meeting = Meeting(*meet_info)
+            cal.add_meeting(new_meeting)
+    return cal
+
 # first_meet = Meeting(2,0,30,"Huy Dai","We met with two guys")
 # cal = Calendar()
 # cal.add_meeting(first_meet)
 
 # print(cal.get_meeting(2,0))
-# print(cal.find_time_slot(2,60))
+
+#cal = read_initial_data()
+#print(cal.find_time_slot(2,60))
 
 #print(parseTime("1:30 AM"))
 #print(parseTime(1439,True))
