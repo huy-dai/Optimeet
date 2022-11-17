@@ -1,14 +1,97 @@
-from calendar import Calendar, Meeting
-from flask import Flask, json
+from flask import Flask, json, request
+import my_calendar as cal
 
 app = Flask(__name__)
+calendar = cal.Calendar()
 
-@app.route('/add', methods=['POST'])
-def add_calendar():
-  #Read in given POST body
+@app.route('/addmeeting', methods=['POST'])
+def add_meeting():
+  '''
+  User provides meeting information in JSON body with the following params:
+  
+  `day` (int) - that denotes day of the week ('Monday','Tuesday', etc.)
+  `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
+  `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
+  `contact` (str) - Name of person meeting with
+  '''
+  post_json = request.json
+  day = cal.parseDate(post_json['day'])
+  start = cal.parseTime(post_json['start'])
+  end = cal.parseTime(post_json['end'])
+  contact = post_json['contact']
+  new_meeting = cal.Meeting(day,start,end,contact)
+  res = calendar.add_meeting(new_meeting)
+  if not res:
+    return json.dumps({"success": False}), 400 #Bad request
+  return json.dumps({"success": True}), 201
+
+@app.route('/getmeeting', methods=['POST'])
+def get_meeting():
+  '''
+  Get a meeting happening on `day` starting at `start` time.
+  
+  User provides meeting information in JSON body with the following params:
+  
+  `day` (int) - that denotes day of the week ('Monday','Tuesday', etc.)
+  `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
+  `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
+  '''
+  post_json = request.json
+  day = cal.parseDate(post_json['day'])
+  start = cal.parseTime(post_json['start'])
+  
+  meeting = calendar.get_meeting(day,start)
+  if not meeting:
+    return json.dumps({"success": False}), 400 #Bad request
+  
+  assert isinstance(meeting, cal.Meeting)
+  res = {
+    'day': cal.parseDate(meeting.day,reverse=True),
+    'start': cal.parseTime(meeting.start,reverse=True),
+    'end': cal.parseTime(meeting.end,reverse=True),
+    'contact': meeting.contact,
+    'notes': meeting.notes,
+    'agenda':  meeting.agenda,
+    'success': True    
+  }
+  return json.dumps(res), 201
+
+@app.route('/addnotes', methods=['POST'])
+def add_notes():
+  '''
+  Add/overwrite notes for a meeting
+  
+  User provides meeting information in JSON body with the following params:
+  
+  `day` (int) - that denotes day of the week ('Monday','Tuesday', etc.)
+  `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
+  `notes` (str) - Notes of meeting (to overwrite previous)
+  '''
+  post_json = request.json
+  day = cal.parseDate(post_json['day'])
+  start = cal.parseTime(post_json['start'])
+  notes = post_json['notes']
+  calendar.set_meeting_notes(day,start,notes)
+  return json.dumps({"success": True}), 201
+  
+@app.route('/addagenda', methods=['POST'])
+def add_agenda():
+  '''
+  Add/overwrite agenda for a meeting
+  
+  User provides meeting information in JSON body with the following params:
+  
+  `day` (int) - that denotes day of the week ('Monday','Tuesday', etc.)
+  `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
+  `agenda` (str) - Agenda of meeting (to overwrite previous)
+  '''
+  post_json = request.json
+  day = cal.parseDate(post_json['day'])
+  start = cal.parseTime(post_json['start'])
+  agenda = post_json['agenda']
+  calendar.set_meeting_agenda(day,start,agenda)
   return json.dumps({"success": True}), 201
 
 if __name__ == '__main__':
-    calendar = Calendar()
     app.run() 
     
