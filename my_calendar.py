@@ -151,6 +151,7 @@ def parseTime(time, reverse=False):
     if hour <= 11:
         am_or_pm = "AM"
     else:
+        hour -= 12
         am_or_pm = "PM"
     if hour == 0:
         hour = 12
@@ -166,3 +167,4 @@ def parseTime(time, reverse=False):
 
 #print(parseTime("1:30 AM"))
 #print(parseTime(1439,True))
+#print(parseTime(39,True))
