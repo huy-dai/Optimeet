@@ -15,7 +15,7 @@ def add_meeting():
   `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
   `contact` (str) - Name of person meeting with
   '''
-  post_json = request.json
+  post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   start = cal.parseTime(post_json['start'])
   end = cal.parseTime(post_json['end'])
@@ -37,7 +37,7 @@ def get_meeting():
   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
   `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
   '''
-  post_json = request.json
+  post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   start = cal.parseTime(post_json['start'])
   
@@ -68,7 +68,7 @@ def find_meeting():
  
   Whether a time slot was found will be denoted by `success` boolean (true for found)
   '''
-  post_json = request.json
+  post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   length = int(post_json['length'])
   found_meeting = calendar.find_time_slot(day,length)
@@ -94,7 +94,7 @@ def add_notes():
   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
   `notes` (str) - Notes of meeting (to overwrite previous)
   '''
-  post_json = request.json
+  post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   start = cal.parseTime(post_json['start'])
   notes = post_json['notes']
@@ -112,7 +112,7 @@ def add_agenda():
   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
   `agenda` (str) - Agenda of meeting (to overwrite previous)
   '''
-  post_json = request.json
+  post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   start = cal.parseTime(post_json['start'])
   agenda = post_json['agenda']
