@@ -143,7 +143,7 @@ def parseTime(time, reverse=False):
         hour, minute = timestamp.split(":")
         hour = int(hour)
         minute = int(minute)
-        if am_or_pm == "PM":
+        if am_or_pm == "PM" and hour != 12:
             hour += 12
         if hour==12 and am_or_pm=="AM":
             hour = 0

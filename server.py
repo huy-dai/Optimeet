@@ -3,6 +3,7 @@ import my_calendar as cal
 
 app = Flask(__name__)
 calendar = cal.read_initial_data()
+#print([str(m) for m in calendar.meetings])
 
 @app.route('/addmeeting', methods=['POST'])
 def add_meeting():
