@@ -1,0 +1,16 @@
+{
+    "day": "thursday",
+    "length":30
+}
+
+{
+    "day": "thursday",
+    "start":"8:00 AM",
+    "end":"9:30 PM",
+    "contact":"Huy Dai"
+}
+
+{
+    "day": "thursday",
+    "start":"4:30 PM"
+}

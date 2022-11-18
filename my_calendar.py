@@ -32,7 +32,6 @@ class Calendar:
         for i in range(0,len(available)-1):
             curr = available[i]
             next = available[i+1]
-            assert next[0] >= curr[1]
             diff = next[0] - curr[1]
             if diff >= length and curr[1]//60 >= earliest_hour:
                 return (curr[1], curr[1]+length)
