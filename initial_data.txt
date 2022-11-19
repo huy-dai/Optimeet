@@ -1,20 +1,20 @@
-monday|8:00 AM|12:00 PM|Harry Styles||
-monday|1:00 PM|1:30 PM|Harry Styles||
-monday|3:00 PM|4:00 PM|Harry Styles||
-monday|4:00 PM|6:00 PM|Nicholas Cage||
-monday|7:00 PM|10:00 PM|Blake Shelton||
-tuesday|8:00 AM|1:00 PM|Miles Teller||
-tuesday|3:00 PM|4:00 PM|Blake Shelton||
-tuesday|6:00 PM|8:00 PM|Nicholas Cage||
-wednesday|9:00 AM|11:00 AM|Aaron Miles||
-wednesday|1:00 PM|2:00 PM|Harry Styles||
-wednesday|3:00 PM|4:30 PM|Miles Teller||
-wednesday|8:30 PM|10:00 PM|Blake Shelton||
-thursday|12:00 PM|3:00 PM|Miles Teller||
-thursday|4:00 PM|7:00 PM|Blake Shelton||
-thursday|9:00 PM|10:00 PM|Nicholas Cage||
-friday|8:00 AM|9:30 AM|Harry Styles||
-friday|1:00 PM|1:30 PM|Harry Styles||
-friday|3:00 PM|4:00 PM|Harry Styles||
-friday|4:00 PM|6:00 PM|Nicholas Cage||
-friday|7:00 PM|10:00 PM|Blake Shelton||
+monday|8:00 AM|12:00 PM|Harry||
+monday|1:00 PM|1:30 PM|Aaron||
+monday|3:00 PM|4:00 PM|Harry|Today we discussed the possibility of switching topics for the Linguistics class project. We agreed our current research idea on Romanic language seems too difficult.|
+monday|4:00 PM|6:00 PM|Nicholas||
+monday|7:00 PM|10:00 PM|Blake||
+tuesday|8:00 AM|1:00 PM|Miles||
+tuesday|3:00 PM|4:00 PM|Blake|I got advice from Blake to attend more networking sessions hosted by the school CS department. I plan to ask him more on who I can reach out to polish my resume and cover letter.|
+tuesday|6:00 PM|8:00 PM|Nicholas||
+wednesday|9:00 AM|11:00 AM|Aaron||
+wednesday|1:00 PM|2:00 PM|Harry||
+wednesday|3:00 PM|4:30 PM|Miles|Miles wanted me to attend the conference for Rocket Team next month, but I am not entirely sure if I will be able to make it. I will have to ask him about the travel dates next time we meet.|
+wednesday|8:30 PM|10:00 PM|Blake||
+thursday|12:00 PM|3:00 PM|Miles||
+thursday|4:00 PM|7:00 PM|Blake||
+thursday|9:00 PM|10:00 PM|Nicholas|During the meeting, we were able to flesh out our ideas and goals for the food app we want to make. I want to get together with him again to figure out what coding languages we want to use for the app.|
+friday|8:00 AM|9:30 AM|Aaron|I tutored Aaron on Stokes Theorem for his Calc homework. Next time we meet he wants me to help cover Green Theorem again with him.|
+friday|1:00 PM|1:30 PM|Harry||
+friday|3:00 PM|4:00 PM|Harry||
+friday|4:00 PM|6:00 PM|Nicholas||
+friday|7:00 PM|10:00 PM|Blake||
