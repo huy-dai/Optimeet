@@ -1,3 +1,5 @@
+from difflib import get_close_matches, SequenceMatcher
+
 DATES = {
     'monday':1,
     'tuesday':2,
@@ -15,11 +17,12 @@ class Calendar:
         '''
         self.meetings = []
     
-    def find_time_slot(self, dayofweek, length, earliest_hour=8):
+    def find_time_slot(self, dayofweek, length, order=1, earliest_hour=8):
         '''
         Find free time slot in Calendar for day `dayofweek`
         for `length` number of minutes given that the earliest hour 
-        we want to meet is `earliest_hour`
+        we want to meet is `earliest_hour` and that we want to get
+        the `order`_th open time slot of the day
         
         Returns (start,end) if time slot found, None otherwise
         '''
@@ -28,14 +31,20 @@ class Calendar:
         available.sort(key=lambda m: m[0])
         available.insert(0,(60*earliest_hour,60*earliest_hour)) #Start marker
         available.append((1440-1,1440-1)) #End marker
-        print(available)
+        
+        open_time_slots = []    
         for i in range(0,len(available)-1):
             curr = available[i]
             next = available[i+1]
             diff = next[0] - curr[1]
             if diff >= length and curr[1]//60 >= earliest_hour:
-                return (curr[1], curr[1]+length)
+                for j in range(diff//length):
+                    open_time_slots.append((curr[1]+length*j,curr[1]+length*(j+1)))
+        print(open_time_slots)
+        if len(open_time_slots) >= order:
+            return open_time_slots[order-1]            
         return None
+    
     def add_meeting(self,new_meeting):
         '''
         Add a new meeting to the Calendar.
@@ -60,6 +69,31 @@ class Calendar:
             if m.day == dayofweek and m.get_time_tuple()[0] == start:
                 return m
         return None
+
+    def get_contact_meeting(self, contact):
+        '''
+        Get the last meeting we had with a given contact that contains notes
+        
+        Requires:
+        - `contact` is a string denoting first name of that person
+        
+        '''
+        contact_set = set([m.contact for m in self.meetings])
+        
+        #In the case Voiceflow or the user misspoke the name, get
+        #the name of contacts which we had a meeting with that sounded
+        #closest to the provided name
+        
+        close_matches = get_close_matches(contact, contact_set) #By default, similarity cutoff is 0.6
+        if not close_matches: 
+            return None #No previously known contact with that name
+        best_contact = close_matches[0]
+        meetings_with_notes = [m for m in self.meetings if m.contact == best_contact and m.notes != ""]
+        if not meetings_with_notes:
+            return None #No previous meetings with contact that has Optinotes stored
+        meetings_with_notes.sort(reverse=True,key=lambda m: (m.day,m.start))
+        return meetings_with_notes[0]
+
     def set_meeting_notes(self, dayofweek, start, new_notes):
         '''
         Overwrite notes for the meeting on `dayofweek` starting at `start` time
@@ -187,8 +221,8 @@ def read_initial_data(filename="initial_data.txt"):
 # print(cal.get_meeting(2,0))
 
 #cal = read_initial_data()
-#print(cal.find_time_slot(2,60))
-
+#print(cal.find_time_slot(2,60,7))
+#print(cal.get_contact_meeting("Myle"))
 #print(parseTime("1:30 AM"))
 #print(parseTime(1439,True))
 #print(parseTime(39,True))
