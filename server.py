@@ -1,6 +1,7 @@
 from flask import Flask, json, request
 import my_calendar as cal
 
+
 app = Flask(__name__)
 calendar = cal.read_initial_data()
 #print([str(m) for m in calendar.meetings])
@@ -13,7 +14,7 @@ def add_meeting():
   `day` (str) - that denotes day of the week ('monday','tuesday', etc.)
   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
   `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
-  `contact` (str) - Name of person meeting with
+  `contact` (str) - First name of person meeting with
   '''
   post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
@@ -23,7 +24,7 @@ def add_meeting():
   new_meeting = cal.Meeting(day,start,end,contact)
   res = calendar.add_meeting(new_meeting)
   if not res:
-    return json.dumps({"success": False}), 400 #Bad request
+    return json.dumps({"success": False}), 201 #Bad request
   return json.dumps({"success": True}), 201
 
 @app.route('/getmeeting', methods=['POST'])
@@ -43,7 +44,35 @@ def get_meeting():
   
   meeting = calendar.get_meeting(day,start)
   if not meeting:
-    return json.dumps({"success": False}), 400 #Bad request
+    return json.dumps({"success": False}), 201 #Bad request
+  
+  assert isinstance(meeting, cal.Meeting)
+  res = {
+    'day': cal.parseDate(meeting.day,reverse=True),
+    'start': cal.parseTime(meeting.start,reverse=True),
+    'end': cal.parseTime(meeting.end,reverse=True),
+    'contact': meeting.contact,
+    'notes': meeting.notes,
+    'agenda':  meeting.agenda,
+    'success': True    
+  }
+  return json.dumps(res), 201
+
+@app.route('/getcontactmeeting', methods=['POST'])
+def get_contact_meeting():
+  '''
+  Get last meeting that we had with a given person which has notes.
+  
+  User provides meeting information in JSON body with the following params:
+  `contact` (str) - first name of person we had the meeting with
+  
+  Whether a meeting is found will be denoted by `success` boolean
+  '''
+  post_json = request.get_json(force=True) 
+  contact = post_json['contact']
+  meeting = calendar.get_contact_meeting(contact)
+  if not meeting:
+    return json.dumps({"success": False}), 201 #No such meeting found
   
   assert isinstance(meeting, cal.Meeting)
   res = {
@@ -65,16 +94,17 @@ def find_meeting():
   User provides meeting information in JSON body with the following params:
   `day` (str) - that denotes day of the week ('Monday','Tuesday', etc.)
   `length` (int) - Integer that denotes length of the meeting (in minutes)
+  `order` (int) - A number >= 1 telling the server to get the n_th open time slot in the day
  
   Whether a time slot was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
   day = cal.parseDate(post_json['day'])
   length = int(post_json['length'])
-  found_meeting = calendar.find_time_slot(day,length)
+  order = int(post_json['order'])
+  found_meeting = calendar.find_time_slot(day,length,order)
   if not found_meeting:
-    return json.dumps({"success": False}), 400 #Bad request
-  
+    return json.dumps({"success": False}), 201 #Bad request
   res = {
     'day': post_json['day'],
     'start': cal.parseTime(found_meeting[0],reverse=True),
