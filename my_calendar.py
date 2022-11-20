@@ -48,11 +48,11 @@ class Calendar:
     def add_meeting(self,new_meeting):
         '''
         Add a new meeting to the Calendar.
-        Returns False if new_meeting conflicts in time with current meetings, True otherwise
         '''
-        for m in self.meetings:
-            if m.overlap(new_meeting):
-                return False
+        #Note: overlap check removed to support "artificial" meetings
+        #for m in self.meetings:
+        #    if m.overlap(new_meeting):
+        #        return False
         self.meetings.append(new_meeting)
         return True
     
@@ -72,7 +72,7 @@ class Calendar:
 
     def get_contact_meeting(self, contact):
         '''
-        Get the last meeting we had with a given contact that contains notes
+        Get the last meeting we had with a given contact. 
         
         Requires:
         - `contact` is a string denoting first name of that person
@@ -88,11 +88,9 @@ class Calendar:
         if not close_matches: 
             return None #No previously known contact with that name
         best_contact = close_matches[0]
-        meetings_with_notes = [m for m in self.meetings if m.contact == best_contact and m.notes != ""]
-        if not meetings_with_notes:
-            return None #No previous meetings with contact that has Optinotes stored
-        meetings_with_notes.sort(reverse=True,key=lambda m: (m.day,m.start))
-        return meetings_with_notes[0]
+        meetings_with_contact = [m for m in self.meetings if m.contact == best_contact]
+        meetings_with_contact.sort(reverse=True,key=lambda m: (m.day,m.start)) 
+        return meetings_with_contact[0] #Return the latest meeting
 
     def set_meeting_notes(self, dayofweek, start, new_notes):
         '''
@@ -102,6 +100,15 @@ class Calendar:
             if m.day == dayofweek and m.get_time_tuple()[0] == start:
                 m.set_notes(new_notes)
                 return
+    def add_artificial_meeting_notes(self, contact, new_notes):
+        '''
+        Create an artificial meeting for a given `contact` with notes of `new_notes`
+        
+        This meeting is set by convention to be Sunday from 11:58-11:59 PM
+        '''
+        new_meeting = Meeting(7,1438,1439,contact,new_notes)
+        self.add_meeting(new_meeting)
+        
     def set_meeting_agenda(self, dayofweek, start, new_agenda):
         '''
         Overwrite agenda for the meeting on `dayofweek` starting at `start` time

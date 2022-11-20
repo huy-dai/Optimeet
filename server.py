@@ -61,12 +61,13 @@ def get_meeting():
 @app.route('/getcontactmeeting', methods=['POST'])
 def get_contact_meeting():
   '''
-  Get last meeting that we had with a given person which has notes.
+  Get last meeting that we had with a given person. This includes "artificial" meetings
+  (set by convention to be Sunday from 11:58-11:59 PM) that contains notes stored for that person.
   
   User provides meeting information in JSON body with the following params:
   `contact` (str) - first name of person we had the meeting with
-  
-  Whether a meeting is found will be denoted by `success` boolean
+
+  Whether a meeting was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
   contact = post_json['contact']
@@ -130,7 +131,22 @@ def add_notes():
   notes = post_json['notes']
   calendar.set_meeting_notes(day,start,notes)
   return json.dumps({"success": True}), 201
+
+@app.route('/addartificialnotes', methods=['POST'])
+def add_artificial_notes():
+  '''
+  Add notes for an "artificial" meeting for a given contact
   
+  User provides meeting information in JSON body with the following params:
+  `contact` (str) - first name of person we had the meeting with
+  `notes` (str) - notes of meeting (to overwrite previous, if one exists)
+  '''
+  post_json = request.get_json(force=True) 
+  contact = post_json['contact']
+  notes = post_json['notes']
+  calendar.add_artificial_meeting_notes(contact,notes)
+  return json.dumps({"success": True}), 201
+
 @app.route('/addagenda', methods=['POST'])
 def add_agenda():
   '''
