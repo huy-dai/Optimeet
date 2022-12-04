@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import datetime
 import os.path
-import pytz
 from dateutil.relativedelta import relativedelta
 
 from google.auth.transport.requests import Request
@@ -13,10 +12,10 @@ from googleapiclient.errors import HttpError
 
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-calendarId_dict = {'User': '', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': ''} # Preset Google Calendar IDs
-emailId_dict = {'User': '', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': ''} # Preset Email IDs
+calendarId_dict = {'User': 'i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitialvarez@gmail.com'} # Preset Google Calendar IDs
+emailId_dict = {'User': 'akarshaurora@gmail.com', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitiaalvarez@gmail.com'} # Preset Email IDs
 
 def get_credentials():
     """
@@ -77,16 +76,9 @@ def get_user_meetings(start, end):
     end = end.isoformat() + 'Z'
 
     # Execute events() query
-    body = {
-        "calendarId": calendarId_dict['User'],
-        "timeMin": start,
-        "timeMax": end,
-        "timeZone": 'US/Eastern',
-        "maxResults": 100,
-        "singleEvents": True,
-        "orderBy=": 'startTime'
-    }
-    events_result = service.events().list(body=body).execute()
+    events_result = service.events().list(calendarId='i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', timeMin=start, timeMax=end, timeZone='US/Eastern',
+                                              maxResults=100, singleEvents=True,
+                                              orderBy='startTime').execute()
     events = events_result.get('items', [])
 
     if not events:
@@ -96,7 +88,7 @@ def get_user_meetings(start, end):
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
         end = event['end'].get('dateTime', event['end'].get('date'))
-        event_times.append(create_dtobject(start), create_dtobject(end))
+        event_times.append((create_dtobject(start), create_dtobject(end)))
 
     return event_times
 
@@ -119,8 +111,8 @@ def get_contact_meetings(contact, start, end):
 
     # Execute freebusy() query
     body = {
-        "timeMin": start.isoformat(),
-        "timeMax": end.isoformat(),
+        "timeMin": start,
+        "timeMax": end,
         "timeZone": 'US/Eastern',
         "items": [
             {
@@ -163,7 +155,7 @@ def find_meeting_timeslot(contact, duration, order=1, earliest_hour=9, latest_ho
     weekdays = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
 	
     def date_for_weekday(day: int):
-        today = date.today()
+        today = datetime.date.today()
         weekday = today.weekday()
         return today + datetime.timedelta(days=day - weekday)
     
@@ -182,21 +174,23 @@ def find_meeting_timeslot(contact, duration, order=1, earliest_hour=9, latest_ho
 
     earliest_time = datetime.datetime.combine(meeting_date, datetime.time(earliest_hour, 0, 0))
     latest_time = datetime.datetime.combine(meeting_date, datetime.time(latest_hour, 0, 0))
-    unavailable.insert((meeting_day_start, earliest_time))
-    unavailable.insert((latest_time, meeting_day_end))
+    unavailable.insert(0, (meeting_day_start, earliest_time))
+    unavailable.append((latest_time, meeting_day_end))
 
     available = []
     for i in range(0, len(unavailable)-1):
         current_slot = unavailable[i]
         next_slot = unavailable[i+1]
         time_difference = (next_slot[0] - current_slot[1]).total_seconds() / 60
-        if time_difference >= duration and current_slot[1] >= earliest_time and current_slot <= latest_time:
-            for j in range(time_difference//duration):
+        if time_difference >= duration and current_slot[1] >= earliest_time and current_slot[1] <= latest_time:
+            for j in range(int(time_difference)//duration):
                 available.append((current_slot[1] + datetime.timedelta(minutes=j*duration), current_slot[1] + datetime.timedelta(minutes=(j+1)*duration)))
     
     if len(available) >= order:
         return available[order-1]            
     return None
+
+time = find_meeting_timeslot('Marcos', 60, order=1, earliest_hour=9, latest_hour=17, dayofweek='Tuesday', date=None)
 
 def create_meeting(title, agenda, start, end, contact):
     """
@@ -213,8 +207,8 @@ def create_meeting(title, agenda, start, end, contact):
         None
     """
     service = build('calendar', 'v3', credentials=get_credentials())
-    start = start.isoformat() + 'Z'
-    end = end.isoformat() + 'Z'
+    start = (start + datetime.timedelta(hours=5)).isoformat() + 'Z'
+    end = (end + datetime.timedelta(hours=5)).isoformat() + 'Z'
 
     body = {
         'summary': title,
@@ -230,15 +224,20 @@ def create_meeting(title, agenda, start, end, contact):
         'attendees': [
         {'email': emailId_dict[contact]},
         ],
-        'conferenceData':{
-        'createRequest':{ 'requestId': 'Sample123', 
-                          'conferenceSolutionKey':{type: 'hangoutsMeet'}
-            }
-        }
+        "conferenceData": {
+        "createRequest": {
+          "conferenceSolutionKey": {
+            "type": "hangoutsMeet"
+          },
+          "requestId": "RandomString"
+          }
+        },
     }
     service.events().insert(calendarId=calendarId_dict['User'], body=body).execute()
 
     return None
+
+#create_meeting('Test', 'Test Optimeet', time[0], time[1], 'Marcos')
 
 def get_previous_meeting(contact):
     """
@@ -255,16 +254,9 @@ def get_previous_meeting(contact):
     then = now - relativedelta(months=1)
     then = then.isoformat() + 'Z'
 
-    body = {
-        "calendarId": calendarId_dict['User'],
-        "timeMin": then,
-        "timeZone": 'US/Eastern',
-        "q": emailId_dict[contact],
-        "maxResults": 100,
-        "singleEvents": True,
-        "orderBy=": 'startTime'
-    }
-    events_result = service.events().list(body=body).execute()
+    events_result = service.events().list(calendarId=calendarId_dict['User'], timeMin=then, timeZone='US/Eastern', q=emailId_dict[contact],
+                                              maxResults=10, singleEvents=True,
+                                              orderBy='startTime').execute()
     events = events_result.get('items', [])
     eventId = events.pop()['id']
 
@@ -284,10 +276,14 @@ def add_optinotes(eventId, optinotes):
     service = build('calendar', 'v3', credentials=get_credentials())
 
     event = service.events().get(calendarId=calendarId_dict['User'], eventId=eventId).execute()
-    event['summary'] = optinotes
+    event['description'] = optinotes
+    service.events().update(calendarId=calendarId_dict['User'], eventId=eventId, body=event).execute()
 
-    service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+    return None
 
+print(get_previous_meeting('Marcos'))
+
+add_optinotes(get_previous_meeting('Marcos'), 'hey my name is akarsh')
 
 def get_optinotes(eventId):
     """
@@ -301,7 +297,14 @@ def get_optinotes(eventId):
     """
     service = build('calendar', 'v3', credentials=get_credentials())
 
-    event = service.events().get(calendarId=calendarId_dict['User'], eventId='eventId').execute()
+    event = service.events().get(calendarId=calendarId_dict['User'], eventId=eventId).execute()
     optinotes = event['description']
 
     return optinotes
+
+print(get_optinotes(get_previous_meeting('Marcos')))
+
+# Server setup
+# Separating agenda from optinotes
+# Storing optinotes for nonexisting meetings
+# Building 4 calendars
