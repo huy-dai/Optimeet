@@ -191,6 +191,7 @@ def find_meeting_timeslot(contact, duration, order=1, earliest_hour=9, latest_ho
     return None
 
 time = find_meeting_timeslot('Marcos', 60, order=1, earliest_hour=9, latest_hour=17, dayofweek='Tuesday', date=None)
+print(time)
 
 def create_meeting(title, agenda, start, end, contact):
     """
@@ -281,8 +282,6 @@ def add_optinotes(eventId, optinotes):
 
     return None
 
-print(get_previous_meeting('Marcos'))
-
 add_optinotes(get_previous_meeting('Marcos'), 'hey my name is akarsh')
 
 def get_optinotes(eventId):
@@ -303,6 +302,28 @@ def get_optinotes(eventId):
     return optinotes
 
 print(get_optinotes(get_previous_meeting('Marcos')))
+
+def datetime_to_string(datetime_tuple):
+    """
+    Convert datetime object to tuple of strings
+
+    Parameters:
+        datetime_tuple (tuple): date and time
+            Format: (start_datetime, end_datetime)
+
+    Returns:
+        datetime_str_tuple (tuple): date, start time, and end time strings
+            Format: ("date", "start time", "end time")
+    """
+    start_datetime = datetime_tuple[0]
+    end_datetime = datetime_tuple[1]
+
+    datetime_str = start_datetime.strftime("%A, %B %d from %I:%M %p to ")
+    datetime_str = datetime_str + end_datetime.strftime("%I:%M %p")
+
+    return datetime_str
+
+print(datetime_to_string(time))
 
 # Server setup
 # Separating agenda from optinotes
