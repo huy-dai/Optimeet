@@ -2,6 +2,7 @@ from flask import Flask, json, request
 import my_calendar as cal
 import gcal_functions as gcal
 import datetime
+import dateutil.parser
 
 app = Flask(__name__)
 calendar = cal.read_initial_data()
@@ -18,6 +19,7 @@ def add_meeting():
   `contact` (str) - First name of person meeting with
   '''
   post_json = request.get_json(force=True) 
+  print(post_json)
   day = post_json['day'].lower()
   length = int(post_json['length'])
   order = int(post_json['order'])
@@ -27,9 +29,10 @@ def add_meeting():
     title = f"Meeting with {contact}"
   else:
     title = "Scheduled meeting"
-  start, end = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
-  if not start or not end:
+  res = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
+  if not res:
       return json.dumps({"success": False}), 201
+  start, end = res[0], res[1]
   gcal.create_meeting(title,agenda,start,end,contact)
   return json.dumps({"success": True}), 201
 
@@ -92,8 +95,8 @@ def get_contact_meeting():
   else: 
     prev_meetingID = gcal.get_previous_meeting(contact)
     meeting = gcal.get_meeting(prev_meetingID)
-    start_dt = datetime.datetime.fromisoformat(meeting['start']['dateTime'])
-    end_dt = datetime.datetime.fromisoformat(meeting['end']['dateTime'])
+    start_dt = dateutil.parser.isoparse(meeting['start']['dateTime'])
+    end_dt = dateutil.parser.isoparse(meeting['end']['dateTime'])
     day = gcal.parseDate(start_dt.weekday(),reverse=True)
     notes = gcal.get_optinotes(prev_meetingID)
     res = {
@@ -127,18 +130,22 @@ def find_meeting():
   found_meeting = None
   if bool(post_json['asap']):
     found_meeting = gcal.quick_schedule(contact,length)
+    if not found_meeting:
+      return json.dumps({"success": False}), 201 #Bad request
+    day = gcal.parseDate(found_meeting[0].weekday(),reverse=True)
     start = gcal.parseTime(found_meeting[0].time(),reverse=True)
     end = gcal.parseTime(found_meeting[1].time(),reverse=True)
   else:
-    day = post_json['day']
+    day = post_json['day'].lower()
     order = int(post_json['order'])
     found_meeting = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
+    if not found_meeting:
+      return json.dumps({"success": False}), 201 #No meeting available
     start = gcal.parseTime(found_meeting[0],reverse=True)
     end = gcal.parseTime(found_meeting[1],reverse=True)
-  if not found_meeting:
-    return json.dumps({"success": False}), 201 #Bad request
+
   res = {
-    'day': post_json['day'],
+    'day': day,
     'start': start,
     'end': end,
     'success': True    

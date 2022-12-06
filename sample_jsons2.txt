@@ -1,0 +1,18 @@
+{
+    "contact": "Aaron"
+}
+{
+    "day":"sunday",
+    "length":"60",
+    "order":1,
+    "agenda":"",
+    "contact": "Aaron"
+}
+{
+    "day":"friday",
+    "length":"60",
+    "order":1,
+    "agenda":"",
+    "contact": "Aaron and um Myles",
+    "asap": false
+}
