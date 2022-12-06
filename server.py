@@ -77,6 +77,7 @@ def get_contact_meeting():
   Whether a meeting was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
+  print(post_json)
   contact = gcal.get_closest_contact(post_json['contact'])
   if contact == "User": #No matching GCal contact
     artificial_notes = gcal.get_artificial_notes(post_json['contact'])
@@ -125,6 +126,7 @@ def find_meeting():
   Whether a time slot was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
+  print(post_json)
   contact = post_json['contact']
   length = int(post_json['length'])
   found_meeting = None
@@ -163,6 +165,7 @@ def add_notes():
   `overwrite` (bool) - Whether to overwrite or not (if not, then we append)
   '''
   post_json = request.get_json(force=True) 
+  print(post_json)
   contact = post_json['contact']
   notes = post_json['notes']
   if bool(post_json['overwrite']):
@@ -182,6 +185,7 @@ def add_artificial_notes():
   `overwrite` (bool) - Whether to overwrite or not (if not, then we append)
   '''
   post_json = request.get_json(force=True) 
+  print(post_json)
   contact = post_json['contact']
   notes = post_json['notes']
   overwrite = bool(post_json['overwrite'])
