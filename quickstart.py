@@ -41,7 +41,7 @@ def main():
         # Call the Calendar API
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
         print('Getting the upcoming 10 events')
-        events_result = service.events().list(calendarId='fb4g6fcf0qnid4u6al21frlvec@group.calendar.google.com', timeMin=now,
+        events_result = service.events().list(calendarId='i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', timeMin=now,
                                               maxResults=10, singleEvents=True,
                                               orderBy='startTime').execute()
         events = events_result.get('items', [])
@@ -54,6 +54,15 @@ def main():
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             print(start, event['summary'])
+
+        # later = '2022-11-30T13:00:00-05:00Z'
+        # events_result = service.freebusy().query(timeMin=now, timeMax=later,
+        #                                       items=['fb4g6fcf0qnid4u6al21frlvec@group.calendar.google.com']
+        #                                     ).execute()
+        # events = events_result.get('items', [])
+        # print(events_result)
+        # print(events)
+        
 
     except HttpError as error:
         print('An error occurred: %s' % error)

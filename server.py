@@ -1,10 +1,9 @@
 from flask import Flask, json, request
 import my_calendar as cal
-
+import gcal_functions as gcal
 
 app = Flask(__name__)
 calendar = cal.read_initial_data()
-#print([str(m) for m in calendar.meetings])
 
 @app.route('/addmeeting', methods=['POST'])
 def add_meeting():
@@ -17,46 +16,46 @@ def add_meeting():
   `contact` (str) - First name of person meeting with
   '''
   post_json = request.get_json(force=True) 
-  day = cal.parseDate(post_json['day'])
-  start = cal.parseTime(post_json['start'])
-  end = cal.parseTime(post_json['end'])
-  contact = post_json['contact']
-  new_meeting = cal.Meeting(day,start,end,contact)
-  res = calendar.add_meeting(new_meeting)
-  if not res:
-    return json.dumps({"success": False}), 201 #Bad request
+  dayofweek = gcal.parseDate(post_json['day'])
+  date = gcal.get_date(dayofweek)
+  start = gcal.get_dt(date, gcal.parseTime(post_json['start']))
+  end = gcal.get_dt(date, gcal.parseTime(post_json['end']))
+  contact = gcal.get_closest_contact(post_json['contact'])
+  if contact == "User":
+    title = f"Meeting with {contact}"
+  else:
+    title = "Scheduled meeting"
+  gcal.create_meeting(title,"",start,end,contact)
   return json.dumps({"success": True}), 201
 
-@app.route('/getmeeting', methods=['POST'])
-def get_meeting():
-  '''
-  Get a meeting happening on `day` starting at `start` time.
-  
-  User provides meeting information in JSON body with the following params:
-  
-  `day` (str) - that denotes day of the week ('Monday','Tuesday', etc.)
-  `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
-  `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
-  '''
-  post_json = request.get_json(force=True) 
-  day = cal.parseDate(post_json['day'])
-  start = cal.parseTime(post_json['start'])
-  
-  meeting = calendar.get_meeting(day,start)
-  if not meeting:
-    return json.dumps({"success": False}), 201 #Bad request
-  
-  assert isinstance(meeting, cal.Meeting)
-  res = {
-    'day': cal.parseDate(meeting.day,reverse=True),
-    'start': cal.parseTime(meeting.start,reverse=True),
-    'end': cal.parseTime(meeting.end,reverse=True),
-    'contact': meeting.contact,
-    'notes': meeting.notes,
-    'agenda':  meeting.agenda,
-    'success': True    
-  }
-  return json.dumps(res), 201
+# NOTE: Route is no longer used
+# @app.route('/getmeeting', methods=['POST'])
+# def get_meeting():
+#   '''
+#   Get a meeting happening on `day` starting at `start` time.
+#
+#   User provides meeting information in JSON body with the following params:
+#   `day` (str) - that denotes day of the week ('Monday','Tuesday', etc.)
+#   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
+#   `end` (str) -Time of day (in form "HH:MM AM" or "HH:MM PM"). Must be after `start`
+#   '''
+#   post_json = request.get_json(force=True) 
+#   day = cal.parseDate(post_json['day'])
+#   start = cal.parseTime(post_json['start'])
+#   meeting = calendar.get_meeting(day,start)
+#   if not meeting:
+#     return json.dumps({"success": False}), 201 #Bad request
+#   assert isinstance(meeting, cal.Meeting)
+#   res = {
+#     'day': cal.parseDate(meeting.day,reverse=True),
+#     'start': cal.parseTime(meeting.start,reverse=True),
+#     'end': cal.parseTime(meeting.end,reverse=True),
+#     'contact': meeting.contact,
+#     'notes': meeting.notes,
+#     'agenda':  meeting.agenda,
+#     'success': True    
+#   }
+#   return json.dumps(res), 201
 
 @app.route('/getcontactmeeting', methods=['POST'])
 def get_contact_meeting():
@@ -70,22 +69,33 @@ def get_contact_meeting():
   Whether a meeting was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
-  contact = post_json['contact']
-  meeting = calendar.get_contact_meeting(contact)
-  if not meeting:
-    return json.dumps({"success": False}), 201 #No such meeting found
-  
-  assert isinstance(meeting, cal.Meeting)
-  res = {
-    'day': cal.parseDate(meeting.day,reverse=True),
-    'start': cal.parseTime(meeting.start,reverse=True),
-    'end': cal.parseTime(meeting.end,reverse=True),
-    'contact': meeting.contact,
-    'notes': meeting.notes,
-    'agenda':  meeting.agenda,
-    'success': True    
-  }
-  return json.dumps(res), 201
+  contact = gcal.get_closest_contact(post_json['contact'])
+  if contact == "User": #No matching GCal contact
+    artificial_notes = gcal.get_artificial_notes(post_json['contact'])
+    if not artificial_notes:
+      return json.dumps({"success": False}), 201 #No such meeting found
+    res = {
+      'day':"sunday",
+      'start':"11:58 PM",
+      'end':"11:59 PM",
+      'contact': post_json['contact'],
+      'notes': artificial_notes,
+      'agenda': "",
+      'success': True
+    }
+    return json.dumps(res), 201
+  else: 
+    prev_meetingID = gcal.get_previous_meeting(contact)
+    res = {
+      'day': cal.parseDate(meeting.day,reverse=True),
+      'start': cal.parseTime(meeting.start,reverse=True),
+      'end': cal.parseTime(meeting.end,reverse=True),
+      'contact': meeting.contact,
+      'notes': meeting.notes,
+      'agenda':  meeting.agenda,
+      'success': True    
+    }
+    return json.dumps(res), 201
 
 @app.route('/findmeeting', methods=['POST'])
 def find_meeting():

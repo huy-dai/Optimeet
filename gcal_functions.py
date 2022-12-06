@@ -3,20 +3,35 @@ from __future__ import print_function
 import datetime
 from math import fabs
 import os.path
+import json
 from dateutil.relativedelta import relativedelta
 
+from difflib import get_close_matches
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+DATES = {
+    'monday':0,
+    'tuesday':1,
+    'wednesday':2,
+    'thursday':3,
+    'friday':4,
+    'saturday':5,
+    'sunday':6
+}
+
+artificial_meetings = {
+    
+} # Stores mapping from 'name' to meeting notes
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-calendarId_dict = {'User': 'i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitialvarez@gmail.com'} # Preset Google Calendar IDs
-emailId_dict = {'User': 'akarshaurora@gmail.com', 'Harry': '', 'Aaron': '', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitiaalvarez@gmail.com'} # Preset Email IDs
+calendarId_dict = {'Aaron': 'i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', 'User': 'huydai.gsmst@gmail.com', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitialvarez@gmail.com'} # Preset Google Calendar IDs
+emailId_dict = {'Aaron': 'akarshaurora@gmail.com', 'User': 'fb4g6fcf0qnid4u6al21frlvec@group.calendar.google.com', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitiaalvarez@gmail.com'} # Preset Email IDs
 
 def get_credentials():
     """
@@ -77,7 +92,7 @@ def get_user_meetings(start, end):
     end = end.isoformat() + 'Z'
 
     # Execute events() query
-    events_result = service.events().list(calendarId='i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', timeMin=start, timeMax=end, timeZone='US/Eastern',
+    events_result = service.events().list(calendarId=calendarId_dict['User'], timeMin=start, timeMax=end, timeZone='US/Eastern',
                                               maxResults=100, singleEvents=True,
                                               orderBy='startTime').execute()
     events = events_result.get('items', [])
@@ -295,7 +310,6 @@ def create_meeting(title, agenda, start, end, meeting_contacts):
         },
     }
     service.events().insert(calendarId=calendarId_dict['User'], body=body).execute()
-
     return None
 
 # create_meeting('Test', 'Test Optimeet', time[0], time[1], 'Marcos')
@@ -322,6 +336,20 @@ def get_previous_meeting(contact):
     eventId = events.pop()['id']
 
     return eventId
+
+def get_meeting(meetingID):
+    """
+    Get the meeting object corresponding with meetingID
+
+    Parameters
+        meetingID (str): ID of the meeting
+    
+    Returns:
+        meeting (dict): Object representing the meeting
+    """
+    service = build('calendar', 'v3', credentials=get_credentials())
+    event = service.events().get(calendarId=calendarId_dict['User'], eventId=meetingID).execute()
+    return event
 
 def add_optinotes(eventId, optinotes):
     """
@@ -378,8 +406,6 @@ def overwrite_optinotes(eventId, optinotes):
 
     return None
 
-overwrite_optinotes(get_previous_meeting('Marcos'), 'this is overwriting optinotes')
-
 def get_optinotes(eventId):
     """
     Retrieve stored optinotes for previous meeting with contact
@@ -397,7 +423,97 @@ def get_optinotes(eventId):
 
     return optinotes
 
-print(get_optinotes(get_previous_meeting('Marcos')))
+def create_description(agenda=None,optinotes=None):
+    '''
+    Create a JSON representation of agenda and optinotes 
+    to be stored in Google Calendar's event "Description"
+    
+    Parameters:
+        agenda (str): Event's agenda
+        optinotes (str): Event's optinotes
+    
+    Returns:
+        description (str): JSON object with corresponding "agenda"
+            and "optinotes" key values
+    '''
+    if not agenda:
+        agenda = ""
+    if not optinotes:
+        optinotes = ""
+        
+    description = {
+        'agenda':agenda,
+        'optinotes':optinotes
+    }
+    return json.dumps(description)
+
+def parse_description(description):
+    '''
+    Given a Google Calendar event description containing a JSON object,
+    return the corresponding agenda and optinotes field.
+    
+    Parameters:
+        description (str): Google Calendar's event "Description" field
+        
+    Returns:
+        (agenda, optinotes) (tuple of str): Agenda and optinotes of event
+    
+    '''
+    if not description:
+        return ("","")
+    json_obj = json.loads(description)
+    return (json_obj['agenda'],json_obj['optinotes'])
+    
+    
+## Helper misc functions
+
+def get_closest_contact(contact):
+    '''
+    Given a contact name `contact`, try to find a known calendar user name 
+    closest to that name (within reasonable margins).
+    
+    Otherwise, return the main user as the contact
+    '''
+    contact_set = set(calendarId_dict.keys())
+    
+    #In the case Voiceflow or the user misspoke the name, get
+    #the name of contacts which we had a meeting with that sounded
+    #closest to the provided name
+
+    close_matches = get_close_matches(contact, contact_set) #By default, similarity cutoff is 0.6
+    if not close_matches: 
+        return 'User' #No previously known contact with that name. Returns ourself
+    best_contact = close_matches[0]
+    return best_contact
+        
+def get_artificial_notes(contact):
+    '''
+    Given a contact name `contact`, try to find the latest meeting notes with that 
+    user from the artificial meetings list
+    
+    If no such user, return None
+    ''' 
+    if contact not in artificial_meetings:
+        return None      
+        
+        
+## Helper date and time functions  
+    
+def get_date(dayofweek):
+    '''
+    Get the closest date that is on `dayofweek`. 
+    
+    Parameters:
+        dayofweek (str): Day of week [0,7]
+    
+    Returns:
+        nextDayOfWeek (DateTime Date): Day closest to today that is on `dayofweek`
+            If today is also `dayofweek`, return today's date.
+    '''
+    today = datetime.datetime.today()
+    daysUntilClosest = (dayofweek - today.weekday()) %  7
+    nextDayOfWeek = today + datetime.timedelta(days=daysUntilClosest)
+    return nextDayOfWeek.date()
 
 def datetime_to_string(datetime_tuple):
     """
@@ -419,9 +535,61 @@ def datetime_to_string(datetime_tuple):
 
     return datetime_str
 
-print(datetime_to_string(time))
+def parseDate(day, reverse=False):
+    '''
+    Given day in text form, return corresponding integer
+    in range [0,6]
+    
+    If reverse=True, then we convert from int back into text form
+    ''' 
+    if not reverse:
+        lower_day = day.lower()
+        return DATES[lower_day]
 
+    inv_dates = {v: k for k, v in DATES.items()}
+    return inv_dates[day]
+
+def parseTime(time, reverse=False):
+    '''
+    Given time in text form, e.g. "HH:MM AM" or "HH:MM PM",
+    return the corresponding DateTime.Time object
+    for that time
+    
+    If reverse=True, then we convert from DateTime.Time back to string format
+    ''' 
+    if not reverse:
+        time = datetime.datetime.strptime(time, "%I:%M %p")
+        return time.time()
+    return time.strftime("%I:%M %p")
+ 
+def get_dt(date,time):
+    '''
+    Given a DateTime.Date object `date` and DateTime.Time object `time`,
+    return the corresponding DateTime object
+    '''
+    return datetime.datetime.combine(date,time)
+
+#TODO
 # Server setup
 # Separating agenda from optinotes
 # Storing optinotes for nonexisting meetings
 # Building 4 calendars
+
+if __name__ == "__main__":
+    pass
+    start = datetime.datetime.now()
+    end = start+datetime.timedelta(hours=1)
+    #create_meeting("Meeting with Huy", "", start, end, "Aaron")
+    meetingID = get_previous_meeting("Aaron")
+    print(get_meeting(meetingID))
+    #print(get_closest_contact("Henry"))
+    #print(get_dt(datetime.date(2011, 1, 1), datetime.time(10, 23)))
+    #print(get_date(6))
+    #print(datetime_to_string((datetime.datetime.now(),datetime.datetime.now())))
+    
+    #time = find_meeting_timeslot('Marcos', 60, order=1, earliest_hour=9, latest_hour=17, dayofweek='Tuesday', date=None)
+    #print(time)
+    #create_meeting('Test', 'Test Optimeet', time[0], time[1], 'Marcos')
+    #add_optinotes(get_previous_meeting('Marcos'), 'hey my name is akarsh')
+    #print(get_optinotes(get_previous_meeting('Marcos')))
+    #print(datetime_to_string(time))
