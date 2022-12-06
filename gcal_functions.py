@@ -144,7 +144,7 @@ def get_contact_meetings(contact, start, end):
     for event in events:
         start = event['start']
         end = event['end']
-        event_times.append(create_dtobject(start), create_dtobject(end))
+        event_times.append((create_dtobject(start), create_dtobject(end)))
 
     return event_times
 

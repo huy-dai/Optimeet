@@ -129,11 +129,11 @@ def find_meeting():
     start = gcal.parseTime(found_meeting[0].time(),reverse=True)
     end = gcal.parseTime(found_meeting[1].time(),reverse=True)
   else:
-    day = cal.parseDate(post_json['day'])
+    day = post_json['day']
     order = int(post_json['order'])
-    found_meeting = calendar.find_time_slot(day,length,order)
-    start = cal.parseTime(found_meeting[0],reverse=True)
-    end = cal.parseTime(found_meeting[1],reverse=True)
+    found_meeting = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
+    start = gcal.parseTime(found_meeting[0],reverse=True)
+    end = gcal.parseTime(found_meeting[1],reverse=True)
   if not found_meeting:
     return json.dumps({"success": False}), 201 #Bad request
   res = {
