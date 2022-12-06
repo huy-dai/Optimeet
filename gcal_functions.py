@@ -30,8 +30,8 @@ artificial_meetings = {
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-calendarId_dict = {'Aaron': 'i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', 'User': 'huydai.gsmst@gmail.com', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitialvarez@gmail.com'} # Preset Google Calendar IDs
-emailId_dict = {'Aaron': 'akarshaurora@gmail.com', 'User': 'fb4g6fcf0qnid4u6al21frlvec@group.calendar.google.com', 'Blake': '', 'Myles': '', 'Bob': '', 'Marcos': 'mfespitiaalvarez@gmail.com'} # Preset Email IDs
+calendarId_dict = {'Aaron': 'i1mn18fuoqv9r0b8itrik8nkqc@group.calendar.google.com', 'User': 'huydai.gsmst@gmail.com', 'Blake': '', 'Myles': 'l08mvs6u6u5dln0vlc8nskjens@group.calendar.google.com', 'Bob': '', 'Marcos': 'mfespitialvarez@gmail.com'} # Preset Google Calendar IDs
+emailId_dict = {'Aaron': 'akarshaurora@gmail.com', 'User': 'fb4g6fcf0qnid4u6al21frlvec@group.calendar.google.com', 'Blake': '', 'Myles': 'mylesstapelberg@gmail.com', 'Bob': '', 'Marcos': 'mfespitiaalvarez@gmail.com'} # Preset Email IDs
 
 def get_credentials():
     """
