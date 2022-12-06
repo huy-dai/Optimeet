@@ -165,7 +165,7 @@ def find_meeting_timeslot(meeting_contacts, duration, order=1, earliest_hour=9, 
         availability (tuple): start datetime and end datetime of available timeslot
             Format: (start datetime Object, end datetime Object)
     """
-    weekdays = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+    weekdays = {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3, 'friday': 4, 'saturday': 5, 'sunday': 6}
 	
     def date_for_weekday(day: int):
         today = datetime.date.today()
@@ -254,8 +254,8 @@ def quick_schedule(meeting_contacts, duration=60, order=1, earliest_hour=9, late
         return available[order-1]            
     return None
 
-time = quick_schedule('Marcos')
-print(time)
+#time = quick_schedule('Marcos')
+#print(time)
 
 
 def create_meeting(title, agenda, start, end, meeting_contacts):
@@ -454,10 +454,12 @@ def get_artificial_notes(contact):
     ''' 
     if contact not in artificial_meetings:
         return None      
-        
+    return artificial_meetings
+
+def store_artificial_notes(contact,notes):
+    artificial_meetings[contact] = notes
         
 ## Helper date and time functions  
-    
 def get_date(dayofweek):
     '''
     Get the closest date that is on `dayofweek`. 
@@ -540,7 +542,10 @@ if __name__ == "__main__":
     end = start+datetime.timedelta(hours=1)
     #create_meeting("Meeting with Huy", "", start, end, "Aaron")
     meetingID = get_previous_meeting("Aaron")
-    print(get_meeting(meetingID))
+    meeting = get_meeting(meetingID)
+    print(meeting)
+    print(meeting['start'])
+    
     #print(get_closest_contact("Henry"))
     #print(get_dt(datetime.date(2011, 1, 1), datetime.time(10, 23)))
     #print(get_date(6))
