@@ -114,6 +114,7 @@ def find_meeting():
   
   User provides meeting information in JSON body with the following params:
   `day` (str) - that denotes day of the week ('Monday','Tuesday', etc.)
+  `contact` (str) - Name of contacts we're meeting with
   `length` (int) - Integer that denotes length of the meeting (in minutes)
   `order` (int) - A number >= 1 telling the server to get the n_th open time slot in the day
   `asap` (bool) - A boolean indicating whether to get the latest meeting.
