@@ -185,8 +185,11 @@ def find_meeting_timeslot(meeting_contacts, duration, order=1, earliest_hour=9, 
     def get_all_contact_meetings():
         unavailable = []
         contacts = calendarId_dict.keys()
+        meeting_contacts_split = meeting_contacts.split(" ")
         for contact in contacts:
-            if contact in meeting_contacts:
+            matches = get_close_matches(contact,meeting_contacts_split)
+            print(contact,matches)
+            if len(matches) != 0:
                 unavailable = unavailable + get_contact_meetings(contact, meeting_day_start, meeting_day_end)
         return unavailable 
 
@@ -236,11 +239,14 @@ def quick_schedule(meeting_contacts, duration=60, order=1, earliest_hour=9, late
     def get_all_contact_meetings():
         unavailable = []
         contacts = calendarId_dict.keys()
+        meeting_contacts_split = meeting_contacts.split(" ")
         for contact in contacts:
-            if contact in meeting_contacts:
+            matches = get_close_matches(contact,meeting_contacts_split)
+            print(contact,matches)
+            if len(matches) != 0:
                 unavailable = unavailable + get_contact_meetings(contact, start, end)
-        return unavailable
-
+        return unavailable 
+    
     unavailable = get_user_meetings(start, end) + get_all_contact_meetings()
     unavailable.sort(key=lambda meeting: meeting[0])
 
