@@ -211,8 +211,8 @@ def find_meeting_timeslot(meeting_contacts, duration, order=1, earliest_hour=9, 
         return available[order-1]            
     return None
 
-time = find_meeting_timeslot('Marcos', 60, order=1, earliest_hour=9, latest_hour=17, dayofweek='Tuesday', date=None)
-print(time)
+#time = find_meeting_timeslot('Marcos', 60, order=1, earliest_hour=9, latest_hour=17, dayofweek='Tuesday', date=None)
+#print(time)
 
 def quick_schedule(meeting_contacts, duration=60, order=1, earliest_hour=9, latest_hour=17):
     """
