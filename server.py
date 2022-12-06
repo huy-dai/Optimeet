@@ -161,7 +161,6 @@ def add_artificial_notes():
   post_json = request.get_json(force=True) 
   contact = post_json['contact']
   notes = post_json['notes']
-  gcal.add_artificial_meeting_notes(contact,notes)
   gcal.store_artificial_notes(contact,notes)
   return json.dumps({"success": True}), 201
 
