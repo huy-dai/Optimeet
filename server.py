@@ -139,7 +139,7 @@ def add_notes():
   '''
   post_json = request.get_json(force=True) 
   app.logger.info(post_json)
-  contact = post_json['contact']
+  contact = gcal.get_closest_contact(post_json['contact'])
   notes = post_json['notes']
   if bool(post_json['overwrite']):
     gcal.overwrite_optinotes(gcal.get_previous_meeting(contact), notes)
@@ -159,7 +159,7 @@ def add_artificial_notes():
   '''
   post_json = request.get_json(force=True) 
   app.logger.info(post_json)
-  contact = post_json['contact']
+  contact = gcal.get_closest_contact(post_json['contact'])
   notes = post_json['notes']
   overwrite = bool(post_json['overwrite'])
   gcal.store_artificial_notes(contact,notes,overwrite)
