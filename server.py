@@ -22,7 +22,7 @@ def add_meeting():
   length = int(post_json['length'])
   order = int(post_json['order'])
   agenda = post_json['agenda']
-  contact = gcal.get_closest_contact(post_json['contact'])
+  contact = post_json['contact']
   if contact != "User":
     title = f"Meeting with {contact}"
   else:
@@ -92,12 +92,12 @@ def get_contact_meeting():
   else: 
     prev_meetingID = gcal.get_previous_meeting(contact)
     meeting = gcal.get_meeting(prev_meetingID)
-    start_dt = datetime.datetime.fromisoformat(meeting['start']['datetime'])
-    end_dt = datetime.datetime.fromisoformat(meeting['end']['datetime'])
+    start_dt = datetime.datetime.fromisoformat(meeting['start']['dateTime'])
+    end_dt = datetime.datetime.fromisoformat(meeting['end']['dateTime'])
+    day = gcal.parseDate(start_dt.weekday(),reverse=True)
     notes = gcal.get_optinotes(prev_meetingID)
-    
     res = {
-      'day': gcal.parseDate(meeting.day,reverse=True),
+      'day': day,
       'start': datetime.datetime.strftime(start_dt,"%I:%M %p"),
       'end': datetime.datetime.strftime(end_dt,"%I:%M %p"),
       'contact': meeting['attendees'][0]['email'],
@@ -116,20 +116,30 @@ def find_meeting():
   `day` (str) - that denotes day of the week ('Monday','Tuesday', etc.)
   `length` (int) - Integer that denotes length of the meeting (in minutes)
   `order` (int) - A number >= 1 telling the server to get the n_th open time slot in the day
- 
+  `asap` (bool) - A boolean indicating whether to get the latest meeting.
+      If this is True, we will ignore the `day` and `order` parameters
   Whether a time slot was found will be denoted by `success` boolean (true for found)
   '''
   post_json = request.get_json(force=True) 
-  day = cal.parseDate(post_json['day'])
+  contact = post_json['contact']
   length = int(post_json['length'])
-  order = int(post_json['order'])
-  found_meeting = calendar.find_time_slot(day,length,order)
+  found_meeting = None
+  if bool(post_json['asap']):
+    found_meeting = gcal.quick_schedule(contact,length)
+    start = gcal.parseTime(found_meeting[0].time(),reverse=True)
+    end = gcal.parseTime(found_meeting[1].time(),reverse=True)
+  else:
+    day = cal.parseDate(post_json['day'])
+    order = int(post_json['order'])
+    found_meeting = calendar.find_time_slot(day,length,order)
+    start = cal.parseTime(found_meeting[0],reverse=True)
+    end = cal.parseTime(found_meeting[1],reverse=True)
   if not found_meeting:
     return json.dumps({"success": False}), 201 #Bad request
   res = {
     'day': post_json['day'],
-    'start': cal.parseTime(found_meeting[0],reverse=True),
-    'end': cal.parseTime(found_meeting[1],reverse=True),
+    'start': start,
+    'end': end,
     'success': True    
   }
   return json.dumps(res), 201
@@ -142,11 +152,15 @@ def add_notes():
   User provides meeting information in JSON body with the following params:
   `contact` (str) - first name of person we had the meeting with
   `notes` (str) - Notes of meeting (to overwrite previous)
+  `overwrite` (bool) - Whether to overwrite or not (if not, then we append)
   '''
   post_json = request.get_json(force=True) 
   contact = post_json['contact']
   notes = post_json['notes']
-  gcal.add_optinotes(gcal.get_previous_meeting(contact), notes)
+  if bool(post_json['overwrite']):
+    gcal.overwrite_optinotes(gcal.get_previous_meeting(contact), notes)
+  else:
+    gcal.add_optinotes(gcal.get_previous_meeting(contact), notes)
   return json.dumps({"success": True}), 201
 
 @app.route('/addartificialnotes', methods=['POST'])
@@ -157,11 +171,13 @@ def add_artificial_notes():
   User provides meeting information in JSON body with the following params:
   `contact` (str) - first name of person we had the meeting with
   `notes` (str) - notes of meeting (to overwrite previous, if one exists)
+  `overwrite` (bool) - Whether to overwrite or not (if not, then we append)
   '''
   post_json = request.get_json(force=True) 
   contact = post_json['contact']
   notes = post_json['notes']
-  gcal.store_artificial_notes(contact,notes)
+  overwrite = bool(post_json['overwrite'])
+  gcal.store_artificial_notes(contact,notes,overwrite)
   return json.dumps({"success": True}), 201
 
 @app.route('/addagenda', methods=['POST'])
@@ -175,11 +191,11 @@ def add_agenda():
   `start` (str) - Time of day (in form "HH:MM AM" or "HH:MM PM")
   `agenda` (str) - Agenda of meeting (to overwrite previous)
   '''
-  post_json = request.get_json(force=True) 
-  day = cal.parseDate(post_json['day'])
-  start = cal.parseTime(post_json['start'])
-  agenda = post_json['agenda']
-  calendar.set_meeting_agenda(day,start,agenda)
+  # post_json = request.get_json(force=True) 
+  # day = cal.parseDate(post_json['day'])
+  # start = cal.parseTime(post_json['start'])
+  # agenda = post_json['agenda']
+  # calendar.set_meeting_agenda(day,start,agenda)
   return json.dumps({"success": True}), 201
 
 if __name__ == '__main__':

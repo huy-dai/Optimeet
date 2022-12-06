@@ -40,7 +40,6 @@ class Calendar:
             if diff >= length and curr[1]//60 >= earliest_hour:
                 for j in range(diff//length):
                     open_time_slots.append((curr[1]+length*j,curr[1]+length*(j+1)))
-        print(open_time_slots)
         if len(open_time_slots) >= order:
             return open_time_slots[order-1]            
         return None

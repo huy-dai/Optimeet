@@ -190,7 +190,10 @@ def find_meeting_timeslot(meeting_contacts, duration, order=1, earliest_hour=9, 
                 unavailable = unavailable + get_contact_meetings(contact, meeting_day_start, meeting_day_end)
         return unavailable 
 
-    unavailable = get_user_meetings(meeting_day_start, meeting_day_end) + get_all_contact_meetings()
+    user_mtgs = get_user_meetings(meeting_day_start, meeting_day_end)
+    if not user_mtgs:
+        user_mtgs = []
+    unavailable =  user_mtgs + get_all_contact_meetings()
     unavailable.sort(key=lambda meeting: meeting[0])
 
     earliest_time = datetime.datetime.combine(meeting_date, datetime.time(earliest_hour, 0, 0))
@@ -371,7 +374,7 @@ def add_optinotes(eventId, optinotes):
 
     event = service.events().get(calendarId=calendarId_dict['User'], eventId=eventId).execute()
 
-    if optinotes_title in event['description']:
+    if 'description' in event and optinotes_title in event['description']:
         event['description'] = f"{event['description']}{new_line}{optinotes}"
     else:
         event['description'] = f"{event['description']}{new_line}{new_line}{spacer}{new_line}{new_line}{optinotes_title}{new_line}{optinotes}"
@@ -420,8 +423,10 @@ def get_optinotes(eventId):
     service = build('calendar', 'v3', credentials=get_credentials())
 
     event = service.events().get(calendarId=calendarId_dict['User'], eventId=eventId).execute()
-    optinotes = event['description'].split("Optinotes:", 1)[1]
-
+    if 'description' in event and "Optinotes:" in event['description']:
+        optinotes = event['description'].split("Optinotes:", 1)[1]
+    else:
+        optinotes = ""
     return optinotes
     
 ## Helper misc functions
@@ -454,10 +459,13 @@ def get_artificial_notes(contact):
     ''' 
     if contact not in artificial_meetings:
         return None      
-    return artificial_meetings
+    return artificial_meetings[contact]
 
-def store_artificial_notes(contact,notes):
-    artificial_meetings[contact] = notes
+def store_artificial_notes(contact,notes,overwrite=True):
+    if overwrite or contact not in artificial_meetings:
+        artificial_meetings[contact] = notes
+    else: 
+        artificial_meetings[contact] = artificial_meetings[contact] + ". " + notes
         
 ## Helper date and time functions  
 def get_date(dayofweek):
@@ -508,6 +516,7 @@ def parseDate(day, reverse=False):
         return DATES[lower_day]
 
     inv_dates = {v: k for k, v in DATES.items()}
+    print(inv_dates)
     return inv_dates[day]
 
 def parseTime(time, reverse=False):
