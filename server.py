@@ -136,10 +136,9 @@ def add_notes():
   `notes` (str) - Notes of meeting (to overwrite previous)
   '''
   post_json = request.get_json(force=True) 
-  day = cal.parseDate(post_json['day'])
-  start = cal.parseTime(post_json['start'])
+  contact = post_json['contact']
   notes = post_json['notes']
-  calendar.set_meeting_notes(day,start,notes)
+  gcal.add_optinotes(gcal.get_previous_meeting(contact), notes)
   return json.dumps({"success": True}), 201
 
 @app.route('/addartificialnotes', methods=['POST'])
@@ -154,7 +153,7 @@ def add_artificial_notes():
   post_json = request.get_json(force=True) 
   contact = post_json['contact']
   notes = post_json['notes']
-  calendar.add_artificial_meeting_notes(contact,notes)
+  gcal.add_artificial_meeting_notes(contact,notes)
   return json.dumps({"success": True}), 201
 
 @app.route('/addagenda', methods=['POST'])

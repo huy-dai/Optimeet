@@ -351,6 +351,7 @@ def get_meeting(meetingID):
     event = service.events().get(calendarId=calendarId_dict['User'], eventId=meetingID).execute()
     return event
 
+
 def add_optinotes(eventId, optinotes):
     """
     Store optinotes for previous meeting with contact
@@ -422,48 +423,6 @@ def get_optinotes(eventId):
     optinotes = event['description'].split("Optinotes:", 1)[1]
 
     return optinotes
-
-def create_description(agenda=None,optinotes=None):
-    '''
-    Create a JSON representation of agenda and optinotes 
-    to be stored in Google Calendar's event "Description"
-    
-    Parameters:
-        agenda (str): Event's agenda
-        optinotes (str): Event's optinotes
-    
-    Returns:
-        description (str): JSON object with corresponding "agenda"
-            and "optinotes" key values
-    '''
-    if not agenda:
-        agenda = ""
-    if not optinotes:
-        optinotes = ""
-        
-    description = {
-        'agenda':agenda,
-        'optinotes':optinotes
-    }
-    return json.dumps(description)
-
-def parse_description(description):
-    '''
-    Given a Google Calendar event description containing a JSON object,
-    return the corresponding agenda and optinotes field.
-    
-    Parameters:
-        description (str): Google Calendar's event "Description" field
-        
-    Returns:
-        (agenda, optinotes) (tuple of str): Agenda and optinotes of event
-    
-    '''
-    if not description:
-        return ("","")
-    json_obj = json.loads(description)
-    return (json_obj['agenda'],json_obj['optinotes'])
-    
     
 ## Helper misc functions
 
