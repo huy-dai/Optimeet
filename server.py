@@ -183,6 +183,14 @@ def add_agenda():
   # calendar.set_meeting_agenda(day,start,agenda)
   return json.dumps({"success": True}), 201
 
+@app.route('/check_contact_exists', methods=['POST'])
+def check_contact_exists():
+    post_json = request.get_json(force=True) 
+    app.logger.info(post_json)
+    if gcal.check_contact_exists(post_json['contact']):
+        return json.dumps({"success": True}), 201
+    return json.dumps({"success": False}), 201
+
 # NOTE: Route is no longer used
 # @app.route('/getmeeting', methods=['POST'])
 # def get_meeting():

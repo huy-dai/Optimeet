@@ -545,6 +545,23 @@ def get_dt(date,time):
     '''
     return datetime.datetime.combine(date,time)
 
+def check_contact_exists(meeting_contacts):
+    '''
+    Checks if contact in organization
+
+    Paramenters:
+        meeting_contacts (string): user response to meeting contact query
+        
+    Returns:
+        status (bool): True or False
+    '''
+    status = False
+    for contact in calendarId_dict:
+        if contact in meeting_contacts:
+            status = True
+            break
+    return status
+     
 #TODO
 # Server setup
 # Separating agenda from optinotes
