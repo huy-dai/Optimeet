@@ -183,7 +183,7 @@ def add_agenda():
   # calendar.set_meeting_agenda(day,start,agenda)
   return json.dumps({"success": True}), 201
 
-@app.route('/check_contact_exists', methods=['POST'])
+@app.route('/checkcontactexists', methods=['POST'])
 def check_contact_exists():
     post_json = request.get_json(force=True) 
     app.logger.info(post_json)
