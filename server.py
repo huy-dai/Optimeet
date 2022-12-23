@@ -32,9 +32,11 @@ def add_meeting():
     title = "Scheduled meeting"
   res = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
   if not res:
+      app.logger.info({"success": False})
       return json.dumps({"success": False}), 201
   start, end = res[0], res[1]
   gcal.create_meeting(title,agenda,start,end,contact)
+  app.logger.info({"success": True})
   return json.dumps({"success": True}), 201
 
 @app.route('/getcontactmeeting', methods=['POST'])
@@ -54,6 +56,7 @@ def get_contact_meeting():
   if contact == "User": #No matching GCal contact
     artificial_notes = gcal.get_artificial_notes(post_json['contact'])
     if not artificial_notes:
+      app.logger.info({"success": False})
       return json.dumps({"success": False}), 201 #No such meeting found
     res = {
       'day':"sunday",
@@ -64,6 +67,7 @@ def get_contact_meeting():
       'agenda': "",
       'success': True
     }
+    app.logger.info(res)
     return json.dumps(res), 201
   else: 
     prev_meetingID = gcal.get_previous_meeting(contact)
@@ -82,6 +86,7 @@ def get_contact_meeting():
       'agenda':  "", 
       'success': True    
     }
+    app.logger.info(res)
     return json.dumps(res), 201
 
 @app.route('/findmeeting', methods=['POST'])
@@ -106,6 +111,7 @@ def find_meeting():
   if bool(post_json['asap']):
     found_meeting = gcal.quick_schedule(contact,length)
     if not found_meeting:
+      app.logger.info({"success": False})
       return json.dumps({"success": False}), 201 #Bad request
     day = gcal.parseDate(found_meeting[0].weekday(),reverse=True)
     start = gcal.parseTime(found_meeting[0].time(),reverse=True)
@@ -115,6 +121,7 @@ def find_meeting():
     order = int(post_json['order'])
     found_meeting = gcal.find_meeting_timeslot(contact,length,order,earliest_hour=9,latest_hour=17,dayofweek=day)
     if not found_meeting:
+      app.logger.info({"success": False})
       return json.dumps({"success": False}), 201 #No meeting available
     start = gcal.parseTime(found_meeting[0],reverse=True)
     end = gcal.parseTime(found_meeting[1],reverse=True)
@@ -125,6 +132,7 @@ def find_meeting():
     'end': end,
     'success': True    
   }
+  app.logger.info(res)
   return json.dumps(res), 201
 
 @app.route('/addnotes', methods=['POST'])
@@ -145,6 +153,7 @@ def add_notes():
     gcal.overwrite_optinotes(gcal.get_previous_meeting(contact), notes)
   else:
     gcal.add_optinotes(gcal.get_previous_meeting(contact), notes)
+  app.logger.info({"success": True})
   return json.dumps({"success": True}), 201
 
 @app.route('/addartificialnotes', methods=['POST'])
@@ -163,6 +172,7 @@ def add_artificial_notes():
   notes = post_json['notes']
   overwrite = bool(post_json['overwrite'])
   gcal.store_artificial_notes(contact,notes,overwrite)
+  app.logger.info({"success": True})
   return json.dumps({"success": True}), 201
 
 @app.route('/addagenda', methods=['POST'])
@@ -181,14 +191,17 @@ def add_agenda():
   # start = cal.parseTime(post_json['start'])
   # agenda = post_json['agenda']
   # calendar.set_meeting_agenda(day,start,agenda)
+  app.logger.info({"success": True})
   return json.dumps({"success": True}), 201
 
-@app.route('/check_contact_exists', methods=['POST'])
+@app.route('/checkcontactexists', methods=['POST'])
 def check_contact_exists():
     post_json = request.get_json(force=True) 
     app.logger.info(post_json)
     if gcal.check_contact_exists(post_json['contact']):
+        app.logger.info({"success": True})
         return json.dumps({"success": True}), 201
+    app.logger.info({"success": False})
     return json.dumps({"success": False}), 201
 
 # NOTE: Route is no longer used

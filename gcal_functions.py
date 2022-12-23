@@ -555,12 +555,14 @@ def check_contact_exists(meeting_contacts):
     Returns:
         status (bool): True or False
     '''
-    status = False
-    for contact in calendarId_dict:
-        if contact in meeting_contacts:
-            status = True
-            break
-    return status
+    contacts = calendarId_dict.keys() #Available contacts
+    meeting_contacts_split = meeting_contacts.split(" ") #Input separated into constituent words
+    
+    for contact in contacts:
+        matches = get_close_matches(contact,meeting_contacts_split) #Try to find contact in the list of words
+        if len(matches) != 0:
+            return True
+    return False
      
 #TODO
 # Server setup
